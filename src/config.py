@@ -89,6 +89,7 @@ W4A8 = QuantConfig(4, 8, 16)
 W8A8 = QuantConfig(8, 8, 16)
 W4A16 = QuantConfig(4, 16, 16)
 W1A32 = QuantConfig(1, 32, 32)
+W16A16 = QuantConfig(16, 16, 32)
 W16A32 = QuantConfig(16, 32, 32)
 W32A32 = QuantConfig(32, 32, 32)
 
