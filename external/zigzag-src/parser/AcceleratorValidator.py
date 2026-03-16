@@ -112,6 +112,18 @@ class AcceleratorValidator:
                         "required": True,
                         "schema": {"type": "string", "regex": DIMENSION_REGEX},
                     },
+                    "compression": {
+                        "type": "dict",
+                        "required": False,
+                        "keysrules": {"type": "string"},
+                        "valuesrules": {
+                            "type": "dict",
+                            "schema": {
+                                "ratio": {"type": "float", "required": True},
+                                "decompression_latency": {"type": "integer", "required": False, "default": 0},
+                            },
+                        },
+                    },
                 },
             },
         },

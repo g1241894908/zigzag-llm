@@ -23,6 +23,7 @@ class MemoryInstance:
         mem_type: str = "sram",
         auto_cost_extraction: bool = False,
         double_buffering_support: bool = False,
+        compression: dict | None = None,
     ):
         """
         Collect all the basic information of a physical memory module.
@@ -68,6 +69,7 @@ class MemoryInstance:
         self.rw_port_nb = rw_port
         self.latency = latency
         self.double_buffering_support = double_buffering_support
+        self.compression = compression or {}
 
         self.r_bw_min: int = min_r_granularity if min_r_granularity is not None else r_bw
         self.w_bw_min: int = min_w_granularity if min_w_granularity is not None else w_bw

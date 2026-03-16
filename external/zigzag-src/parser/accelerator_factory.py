@@ -163,6 +163,7 @@ class MemoryFactory:
             min_r_granularity=self.data["min_r_granularity"],
             min_w_granularity=self.data["min_w_granularity"],
             auto_cost_extraction=self.data["auto_cost_extraction"],
+            compression=self.data.get("compression"),
         )
 
     def add_memory_to_graph(self, mem_graph: MemoryHierarchy) -> None:

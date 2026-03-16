@@ -343,6 +343,17 @@ class CostModelEvaluation(CostModelEvaluationABC):
 
         self.active_mem_level = self.mapping.mem_level
 
+        self.compression_ratio = {}
+        self.decompression_latency = {}
+        for layer_op in self.layer.layer_operands:
+            mem_op = self.memory_operand_links.layer_to_mem_op(layer_op)
+            top_mem_level = core.memory_hierarchy.get_operand_top_level(mem_op)
+            mi = top_mem_level.memory_instance
+            if hasattr(mi, "compression") and mi.compression and mem_op.name in mi.compression:
+                comp = mi.compression[mem_op.name]
+                self.compression_ratio[mem_op] = comp.get("ratio", 1.0)
+                self.decompression_latency[mem_op] = comp.get("decompression_latency", 0)
+
         # Run the cost model evaluation
         self.run()
 
@@ -350,8 +361,29 @@ class CostModelEvaluation(CostModelEvaluationABC):
         """! Run the cost model evaluation."""
         self.calc_memory_utilization()
         self.calc_memory_word_access()
+        self.apply_dram_compression()
         self.calc_energy()
         self.calc_latency()
+
+    def apply_dram_compression(self) -> None:
+        if not hasattr(self, 'compression_ratio') or not self.compression_ratio:
+            return
+        from math import ceil
+        for layer_op in self.layer.layer_operands:
+            mem_op = self.memory_operand_links.layer_to_mem_op(layer_op)
+            if mem_op not in self.compression_ratio:
+                continue
+            ratio = self.compression_ratio[mem_op]
+            top_mem_lv = self.mapping.mem_level[layer_op] - 1
+            if top_mem_lv < 0:
+                continue
+            original = self.memory_word_access[layer_op][top_mem_lv]
+            self.memory_word_access[layer_op][top_mem_lv] = MemoryAccesses(
+                ceil(original.rd_out_to_low / ratio),
+                ceil(original.wr_in_by_low / ratio) if original.wr_in_by_low > 0 else 0,
+                original.rd_out_to_high,
+                original.wr_in_by_high,
+            )
 
     def __get_shared_mem_list(
         self,
@@ -774,6 +806,14 @@ class CostModelEvaluation(CostModelEvaluationABC):
                 ].data_trans_amount_per_period.wr_in_by_high
                 mem_bw = self.mem_w_bw_dict[mem_op][mem_lv]
                 wr_in_by_high_real = ceil(data_trans_amount * data_precision / mem_bw)
+
+                is_top_mem_lv = (mem_lv == self.mapping_int.mem_level[layer_op] - 1)
+                if is_top_mem_lv and hasattr(self, 'compression_ratio') and mem_op in self.compression_ratio:
+                    ratio = self.compression_ratio[mem_op]
+                    decomp_lat = self.decompression_latency.get(mem_op, 0)
+                    rd_out_to_low_real = ceil(rd_out_to_low_real / ratio) + decomp_lat
+                    if wr_in_by_low_real > 0:
+                        wr_in_by_low_real = ceil(wr_in_by_low_real / ratio)
 
                 # All
                 real_data_trans = MemoryAccesses(
