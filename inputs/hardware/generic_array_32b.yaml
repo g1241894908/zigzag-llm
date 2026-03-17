@@ -110,8 +110,14 @@ memories:
         th: rw_port_1
     served_dimensions: [D1, D2]
     compression:
+      I1:
+        ratio: 2.0
+        decompression_latency: 0
       I2:
         ratio: 4.0
+        decompression_latency: 0
+      O:
+        ratio: 2.0
         decompression_latency: 0
 
 operational_array:

@@ -23,7 +23,7 @@ model.decode_size = 256
 quant = W16A16
 accelerator = "generic_array_32b"
 mapping_path = "inputs/mapping/weight_unrolled_256.yaml"
-out_path = "outputs/main_compresswx4"
+out_path = "outputs/main_compresswx4_kvx2"
 
 
 def run_experiment():
